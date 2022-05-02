@@ -1,16 +1,14 @@
 #!/bin/bash
 
 WSGI_MODULE=wsgi                               # WSGI module name
-NAME="event-producer"                    # Name of the application
-NUM_WORKERS=${NUM_WORKERS:-4}                  # How many worker processes should Gunicorn spawn
+NAME="producer"                    # Name of the application
+NUM_WORKERS=${NUM_WORKERS:-3}                  # How many worker processes should Gunicorn spawn
 USER=root                                      # The user to run as
 GROUP=root                                     # The group to run as
 PORT=${PORT:-80}                               # Communication will occur through this UNIX socket
 WORKER_TIMEOUT=${WORKER_TIMEOUT:-60}           # Gunicorn worker timeout (in seconds)
 NUM_THREADS=${NUM_THREADS:-2}                  # How many threads each worker can spawn to deal async requests
-LOG_FILE=/src/logs/gunicorn.log
-ACCESS_LOG_FILE=/src/logs/access.log
-RELOAD=${DEVELOPMENT_MODE:-false}
+RELOAD=${DEVELOPMENT_MODE:-true}
 
 echo "Starting $NAME as `whoami` in port $PORT"
 date

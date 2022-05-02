@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  event-producer:
+  producer:
     build:
       context: .
       dockerfile: ./docker/Dockerfile
@@ -31,7 +31,7 @@ services:
     networks:
       - producer-kafka
     depends_on:
-      - event-producer
+      - producer
 
   zookeeper:
     container_name: zookeeper
