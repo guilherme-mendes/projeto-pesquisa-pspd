@@ -39,8 +39,6 @@ class KafkaEventProducer(object):
                     **kafka_configurations,
                 )
 
-    def send(self, topic, event, key=None):
+    def send(self, topic, event, key=None) -> None:
         KafkaEventProducer._producer_instance.send(topic, event, key)
         KafkaEventProducer._producer_instance.flush()
-
-        return event
