@@ -5,3 +5,4 @@ marshmallow~=3.13.0
 pytest-flask~=1.2.0
 requests~=2.26.0
 essential-generators~=1.0
+pyspark==3.2.1

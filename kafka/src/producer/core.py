@@ -37,7 +37,7 @@ def register_internal_event():
         generator = Generator()
         for _ in range(word_qtt):
             word = generator.generate_word()
-            result = producer.send(TOPIC_NAME, word)
+            producer.send(TOPIC_NAME, word)
     except Exception as exc:
         logger.error(
             f"An error occurred while posting words in kafka topic. Error: {exc}"
