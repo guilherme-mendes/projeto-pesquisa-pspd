@@ -1,76 +1,50 @@
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import explode
+from pyspark.sql.functions import split
+from pyspark import SparkConf
+import pyspark.sql.functions as F
 
+class SparkKafka:
 
+    def __init__(self):
+        self.topic = "word-topic"
+        self.broker = "localhost:9092"
+        self.spark_master = "spark://localhost:7077"
 
+        self.spark = SparkSession \
+                    .builder \
+                    .config('spark.jars.packages', 'org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.1') \
+                    .master(self.spark_master) \
+                    .appName("StructuredNetworkWordCount") \
+                    .getOrCreate()
 
-# class SparkKafka:
+        self.spark.sparkContext.setLogLevel('WARN')
 
-#     def __init__(self):
-#         self.topic = "word-topic"
-#         self.broker = "kafka1://localhost:9091"
-#         self.spark_master = "spark://dutra:7077"
-
-#         self.spark = SparkSession \
-#                     .builder \
-#                     .config('spark.jars.packages', 'org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.1') \
-#                     .master(self.spark_master) \
-#                     .appName("StructuredNetworkWordCount") \
-#                     .getOrCreate()
-
-#         self.spark.sparkContext.setLogLevel('WARN')
-
-
-
-# if __name__ == '__main__':
-#     spark_kafka = SparkKafka()
-#     stream = spark_kafka.spark \
-#         .readStream \
-#         .format("kafka") \
-#         .option("kafka.bootstrap.servers", spark_kafka.broker) \
-#         .option("subscribe", spark_kafka.topic) \
-#         .option('startingOffsets', 'latest') \
-#         .option('includeTimestamp', 'true') \
-#         .load()
-
-#     stream.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)")
-
-#     stream.writeStream \
-#         .outputMode("complete") \
-#         .format("console") \
-#         .outputMode("append") \
-#         .option('truncate', 'false') \
-#         .start()
-        
-    # stream.awaitTermination()
-
-if __name__ == "__main__":
-
-    spark = SparkSession.builder.appName("StructuredNetworkWordCount").config('spark.jars.packages', 'org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.1').getOrCreate()
-    spark.sparkContext.setLogLevel('DEBUG')
-
-    df = spark\
+if __name__ == '__main__':
+    sprk = SparkKafka()
+    spark_frame = sprk.spark \
         .readStream \
         .format("kafka") \
-        .option("kafka.bootstrap.servers", "kafka1://localhost:9091") \
-        .option("subscribe", "word-topic") \
-        .option('startingOffsets', 'latest') \
-        .option('includeTimestamp', 'true') \
-        .load()
+        .option("kafka.bootstrap.servers", sprk.broker) \
+        .option("subscribe", sprk.topic) \
+        .load() \
+        .selectExpr("CAST(value AS STRING)")
 
-    df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)")
+    words = spark_frame.select(
+        # explode transforma cada item do array em uma linha
+        explode(
+            split(spark_frame.value, ' ')
+        ).alias('word')
+    )
 
-    lines = df.select("value")
-    count_words = lines.count()
 
-    print(df)
-    print(lines)
-    print(count_words)
+    word_counts = words.groupBy('word').count()
+    every_word = words.groupBy().count()
 
-    find = count_words.writeStream \
-           .outputMode("complete") \
-           .format("console") \
-           .outputMode("append") \
-           .option('truncate', 'false') \
-           .start()
+    query = word_counts\
+        .writeStream\
+        .outputMode('complete')\
+        .format('console')\
+        .start()
 
-    find.awaitTermination()
+    query.awaitTermination()

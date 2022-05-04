@@ -17,8 +17,6 @@ services:
       - "BOOTSTRAP_SERVERS_STRING=kafka1:9091"
     volumes:
       - ./src:/src
-    networks:
-      - producer-kafka
     depends_on:
       - kafka1
 
@@ -28,8 +26,6 @@ services:
       - "80:80"
     volumes:
       - ./nginx:/etc/nginx/conf.d
-    networks:
-      - producer-kafka
     depends_on:
       - producer
 
@@ -45,8 +41,6 @@ services:
     volumes:
       - zookeeper_data:/data
       - zookeeper_datalog:/datalog
-    networks:
-      - producer-kafka
 
   kafka1:
     container_name: kafka1
@@ -54,7 +48,7 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - 9091:9091
+      - 9092:9092
     environment:
       KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka1:19091,LISTENER_DOCKER_EXTERNAL://kafka1:9091
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
@@ -63,14 +57,10 @@ services:
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
     volumes:
       - kafka1_volumes:/var/lib/kafka/data
-    networks:
-      - producer-kafka
 
   kafdrop:
     container_name: kafdrop
     image: obsidiandynamics/kafdrop:latest
-    networks:
-      - producer-kafka
     depends_on:
       - kafka1
     ports:
@@ -81,14 +71,55 @@ services:
   kafka_manager:
     container_name: kafka_manager
     image: sheepkiller/kafka-manager
-    networks:
-      - producer-kafka
     ports:
       - 9000:9000
     environment:
       - ZK_HOSTS=zookeeper:2181
     depends_on:
       - zookeeper
+
+  spark:
+    image: bitnami/spark:3
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - '8080:8080'
+      - '7077:7077'
+
+  spark-worker-1:
+    image: bitnami/spark:3
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - '8081:8081'
+
+  spark-worker-2:
+    image: bitnami/spark:3
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - '8082:8081'
+
+  hadoop:
+    image: cybermaggedon/hadoop
 
 volumes:
   zookeeper_data:
@@ -99,53 +130,3 @@ networks:
   producer-kafka:
     driver: "bridge"
     name: producer-kafka
-  # spark:
-  #   image: bitnami/spark:3
-  #   environment:
-  #     - SPARK_MODE=master
-  #     - SPARK_RPC_AUTHENTICATION_ENABLED=no
-  #     - SPARK_RPC_ENCRYPTION_ENABLED=no
-  #     - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-  #     - SPARK_SSL_ENABLED=no
-  #   ports:
-  #     - '8080:8080'
-  #     - '7077:7077'
-  #   networks:
-  #     - producer-kafka
-
-  # spark-worker-1:
-  #   image: bitnami/spark:3
-  #   environment:
-  #     - SPARK_MODE=worker
-  #     - SPARK_MASTER_URL=spark://spark:7077
-  #     - SPARK_WORKER_MEMORY=1G
-  #     - SPARK_WORKER_CORES=1
-  #     - SPARK_RPC_AUTHENTICATION_ENABLED=no
-  #     - SPARK_RPC_ENCRYPTION_ENABLED=no
-  #     - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-  #     - SPARK_SSL_ENABLED=no
-  #   ports:
-  #     - '8081:8081'
-  #   networks:
-  #     - producer-kafka
-
-  # spark-worker-2:
-  #   image: bitnami/spark:3
-  #   environment:
-  #     - SPARK_MODE=worker
-  #     - SPARK_MASTER_URL=spark://spark:7077
-  #     - SPARK_WORKER_MEMORY=1G
-  #     - SPARK_WORKER_CORES=1
-  #     - SPARK_RPC_AUTHENTICATION_ENABLED=no
-  #     - SPARK_RPC_ENCRYPTION_ENABLED=no
-  #     - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-  #     - SPARK_SSL_ENABLED=no
-  #   ports:
-  #     - '8082:8081'
-  #   networks:
-  #     - producer-kafka
-
-  # hadoop:
-  #   image: cybermaggedon/hadoop
-  #   networks:
-  #     - producer-kafka
