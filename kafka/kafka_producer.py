@@ -27,12 +27,12 @@ class KafkaEventProducer(object):
 
 def generate_word(word_generator: DocumentGenerator):
     word = word_generator.word()
-    return word
+    return word.lower()
 
 if __name__ == "__main__":
     word_generator = DocumentGenerator()
 
-    kafka_producer = KafkaEventProducer(["kafka1:9092"])
+    kafka_producer = KafkaEventProducer(["localhost:9092"])
 
     while True:
         word = generate_word(word_generator)

@@ -7,12 +7,10 @@ class SparkKafka:
     def __init__(self):
         self.topic = "word-topic"
         self.broker = "localhost:9092"
-        self.spark_master = "spark://localhost:7077"
+        self.spark_master = "localhost:7077"
 
         self.spark = SparkSession \
                     .builder \
-                    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.1") \
-                    .master(self.spark_master) \
                     .appName("StructuredNetworkWordCount") \
                     .getOrCreate()
 
@@ -22,9 +20,9 @@ class SparkKafka:
         grouped_words = df.filter(F.lower(F.col("word").substr(1, 1)) == substring).groupBy().count()
         return grouped_words.selectExpr("cast (count as string) %s" % substring)
 
-    def _count_words_by_length(self, df, length):
+    def _count_words_by_length(self, df, length, numeral):
         grouped_words = df.filter(F.length("word") == length).groupBy().count()
-        return grouped_words.selectExpr("cast (count as string) %s" % str(length))
+        return grouped_words.selectExpr(f"cast (count as string) {numeral}")
 
 if __name__ == "__main__":
     sprk = SparkKafka()
@@ -33,6 +31,7 @@ if __name__ == "__main__":
         .format("kafka") \
         .option("kafka.bootstrap.servers", sprk.broker) \
         .option("subscribe", sprk.topic) \
+        .option("port", 9999) \
         .load() \
         .selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)")
 
@@ -50,9 +49,9 @@ if __name__ == "__main__":
     s_words = sprk._count_words_by_substr(words, "s")
     r_words = sprk._count_words_by_substr(words, "r")
 
-    six_words = sprk._count_words_by_length(words, 6)
-    eight_words = sprk._count_words_by_length(words, 8)
-    eleven_words = sprk._count_words_by_length(words, 11)
+    six_words = sprk._count_words_by_length(words, 6, "six")
+    eight_words = sprk._count_words_by_length(words, 8, "eight")
+    eleven_words = sprk._count_words_by_length(words, 11, "eleven")
 
     query_counts = word_counts\
         .writeStream\

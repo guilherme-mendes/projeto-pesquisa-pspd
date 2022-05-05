@@ -136,3 +136,7 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+kafka_2.13-3.1.0.*
+
+kafka_2.13-3.1.0
