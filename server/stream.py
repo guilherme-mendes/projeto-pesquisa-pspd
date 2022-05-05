@@ -7,6 +7,7 @@ from essential_generators import DocumentGenerator
 
 
 def client(client_socket, addr):
+    # Gerador de palavras
     word_generator = DocumentGenerator()
     try:
         while True:
@@ -18,9 +19,12 @@ def client(client_socket, addr):
 
 
 if __name__ == "__main__":
-
+    
+    # Criar TCP/IP socket
     s = socket.socket()
     s.bind(("", 9999))
+    
+    # Escutando conexoes
     s.listen(5)
 
     print("Servidor rodando..." + str(time.time()))
@@ -33,6 +37,7 @@ if __name__ == "__main__":
             t.start()
 
         except KeyboardInterrupt:
+            # Encerrando conexoes
             s.close()
 
         except:
