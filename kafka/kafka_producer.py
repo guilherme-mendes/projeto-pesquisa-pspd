@@ -1,5 +1,6 @@
 from kafka import KafkaProducer
 from essential_generators import DocumentGenerator
+import time
 
 class KafkaEventProducer(object):
     _producer_instance = None
@@ -13,6 +14,7 @@ class KafkaEventProducer(object):
             kafka_configurations = {
                 "value_serializer": lambda x: x.encode("utf-8"),
                 "bootstrap_servers": self.bootstrap_servers,
+                "api_version": (0, 10, 1),
             }
 
             KafkaEventProducer._producer_instance = KafkaProducer(
@@ -24,13 +26,17 @@ class KafkaEventProducer(object):
         KafkaEventProducer._producer_instance.flush()
 
 def generate_word(word_generator: DocumentGenerator):
-    word = word_generator.sentence()
+    word = word_generator.word()
     return word
 
 if __name__ == "__main__":
     word_generator = DocumentGenerator()
 
-    kafka_producer = KafkaEventProducer("localhost:9092")
+    kafka_producer = KafkaEventProducer(["kafka1:9092"])
 
     while True:
+        word = generate_word(word_generator)
+        print(f"Sending: {word}")
         kafka_producer.send("word-topic", generate_word(word_generator))
+        print("Sent!")
+        time.sleep(1)
