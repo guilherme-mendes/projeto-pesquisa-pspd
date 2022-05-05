@@ -14,7 +14,7 @@ services:
       - "DEVELOPMENT_MODE=True"
       - "NUM_THREADS=1"
       - "NUM_WORKERS=1"
-      - "BOOTSTRAP_SERVERS_STRING=kafka1:9091"
+      - "BOOTSTRAP_SERVERS_STRING=kafka1:9092"
     volumes:
       - ./src:/src
     depends_on:
@@ -50,7 +50,7 @@ services:
     ports:
       - 9092:9092
     environment:
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka1:19091,LISTENER_DOCKER_EXTERNAL://kafka1:9091
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka1:19091,LISTENER_DOCKER_EXTERNAL://kafka1:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -79,7 +79,7 @@ services:
       - zookeeper
 
   spark:
-    image: bitnami/spark:3
+    image: bitnami/spark:2
     environment:
       - SPARK_MODE=master
       - SPARK_RPC_AUTHENTICATION_ENABLED=no
@@ -91,7 +91,7 @@ services:
       - '7077:7077'
 
   spark-worker-1:
-    image: bitnami/spark:3
+    image: bitnami/spark:2
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark:7077
@@ -105,7 +105,7 @@ services:
       - '8081:8081'
 
   spark-worker-2:
-    image: bitnami/spark:3
+    image: bitnami/spark:2
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark:7077
@@ -125,8 +125,3 @@ volumes:
   zookeeper_data:
   zookeeper_datalog:
   kafka1_volumes:
-
-networks:
-  producer-kafka:
-    driver: "bridge"
-    name: producer-kafka
