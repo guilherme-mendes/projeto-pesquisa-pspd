@@ -1,0 +1,10 @@
+{
+    "serializer": "json",
+    "topology_specs": "topologies/",
+    "virtualenv_specs": "virtualenvs/",
+    "envs": {
+        "prod": {
+            "virtualenv_root": "/Users/caiofernandes/Desktop/Projetos/Python/venv"
+        }
+    }
+}
